@@ -15,9 +15,11 @@ RUN pip install dnnv
 # dnnv_manage assumes this folder exists already
 # (most likely because one usually installs a tool first which does not require Gurobi?)
 RUN mkdir -p /home/jovyan/.local/share/dnnv/bin
+# Need to add path manually to make sure dnnv correctly finds its tools
+ENV PATH="$PATH:/home/jovyan/.local/share/dnnv/bin"
 # Make Julia's precompilation Docker-friendly
 # (possibly running on different "sub-architectures")
 ENV JULIA_CPU_TARGET=generic
 
 # Install ERAN and MIPVerify
-#RUN dnnv_manage install mipverify eran
+RUN dnnv_manage install mipverify eran
