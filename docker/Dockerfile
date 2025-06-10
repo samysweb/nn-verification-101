@@ -12,5 +12,7 @@ RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
 USER jovyan
 
+RUN mkdir -p /home/jovyan/.local/share/dnnv/bin
+
 # Install ERAN and MIPVerify
 RUN dnnv_manage install mipverify eran
