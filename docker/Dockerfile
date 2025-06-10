@@ -1,10 +1,5 @@
 FROM jupyter/base-notebook:python-3.9
 
-# Upgrade pip to the latest version
-RUN pip install --upgrade pip
-# Install DNNV
-RUN pip install dnnv
-
 USER root
 
 RUN apt update && apt install -y build-essential software-properties-common cmake git curl
@@ -12,7 +7,17 @@ RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
 USER jovyan
 
+# Upgrade pip to the latest version
+RUN pip install --upgrade pip
+# Install DNNV
+RUN pip install dnnv
+
+# dnnv_manage assumes this folder exists already
+# (most likely because one usually installs a tool first which does not require Gurobi?)
 RUN mkdir -p /home/jovyan/.local/share/dnnv/bin
+# Make Julia's precompilation Docker-friendly
+# (possibly running on different "sub-architectures")
+ENV JULIA_CPU_TARGET=generic
 
 # Install ERAN and MIPVerify
-RUN dnnv_manage install mipverify eran
+#RUN dnnv_manage install mipverify eran
