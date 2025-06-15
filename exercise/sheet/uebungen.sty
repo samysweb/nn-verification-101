@@ -1,0 +1,227 @@
+\ProvidesPackage{uebungen}
+\makeatletter
+
+\RequirePackage[utf8]{inputenc}
+\RequirePackage[ngerman]{babel}
+\RequirePackage{a4wide}
+\RequirePackage[pdftex]{epsfig}
+% \RequirePackage{pstricks}
+\RequirePackage{amsmath}
+\RequirePackage{comment}
+\RequirePackage{calc}
+\RequirePackage{graphicx}
+\RequirePackage[margin=2cm]{geometry}
+\RequirePackage{amssymb}
+\RequirePackage{multicol}
+%\setlength{\parindent}{0cm}
+
+
+
+
+%%
+%% logic operators
+%%
+
+%\newcommand\lor{\vee}
+%\newcommand\land{\wedge}
+\newcommand\limplies{\rightarrow}
+\newcommand\limpliedby{\leftarrow}
+\newcommand\lequiv{\leftrightarrow}
+%\newcommand\lequ{\stackrel\cdot=}
+\newcommand\lequ{\doteq}
+
+%%% meine Definitionen %%%
+\newcommand{\Nat}{\ensuremath{\mathbb{N}}}
+\newcommand{\Int}{\ensuremath{\mathbb{Z}}}
+\newcommand{\Quot}{\ensuremath{\mathbb{Q}}}
+\newcommand{\ltrue}{\ensuremath{\mathbf{1}}}  % Konstante für  ''wahr''
+\newcommand{\lfalse}{\ensuremath{\mathbf{0}}} % Konstante für  ''falsch''
+
+\newcommand\val{\mathrm{val}}
+% \newcommand\ltrue{{\bf 1}}
+% \newcommand\lfalse{{\bf 0}}
+
+%%\newcommand\false{\mathrm{false}}
+%%\newcommand\true{\mathrm{true}}
+\newcommand{\true}{\ensuremath{\mathbf{1}}}  % AL Konstante für  ''wahr''
+\newcommand{\false}{\ensuremath{\mathbf{0}}} % AL Konstante für  ''falsch''
+\newcommand{\W}{\ensuremath{\mathbf{W}}}  % Wahrheitswert   ''wahr''
+\newcommand{\F}{\ensuremath{\mathbf{F}}} % Wahrheitswert   ''falsch''
+
+
+%%
+%% div. Symbole
+%% 
+\newcommand{\proofend}{\hfill$\Box$}
+\newcommand{\seq}{\ \raisebox{2.6pt}{\rule{6pt}{1pt}}\hspace{-2mm}\blacktriangleright}
+
+%%
+%% LTL
+%%
+\def\ltlU{\mathbin{\mathbf{U}}}
+\def\ltlX{{\mathbf{X}}}
+\def\ltlV{\mathbin{\mathbf{V}}}
+
+%%
+%% Aufgabenumgebung
+%%
+\def\gobblespaces#1{#1}
+
+\newcommand{\punkte}[1][0]{\if1#1 {1 Punkt}\else \if0#1 {Vertiefung}\else{#1 Punkte}\fi\fi}
+%\newcommand{\punkte}[1]{#1 Punkte}
+
+\newcounter{aufgabennr}
+\newcounter{loesungsnr}
+
+\newenvironment{aufgabe}[1][]{%
+  \addtocounter{aufgabennr}{1}%
+  \global\def\@currentlabel{\theaufgabennr}%
+  \noindent%
+  \underline{\bf Aufgabe~\theaufgabennr}\hfill#1\par\medskip\noindent\gobblespaces}{\bigskip}
+
+\newenvironment{themenaufgabe}[2]{%
+  \addtocounter{aufgabennr}{1}%
+  \global\def\@currentlabel{\theaufgabennr}%
+  \noindent%
+  \underline{\bf Aufgabe~\theaufgabennr}:~\textbf{#1}\hfill\textbf{\punkte{#1}}\par\medskip\noindent\gobblespaces}{\bigskip}
+
+\newenvironment{loesung}[1][]{
+  \addtocounter{loesungsnr}{1}%
+  \global\def\@currentlabel{\theloesungsnr}%
+  \noindent%
+  \underline{\bf L\"osung zu~Aufgabe~\theloesungsnr}~\textbf{#1}\par\medskip\noindent\gobblespaces}{%
+  \bigskip}
+
+%%
+%% Teilaufgaben
+%%
+\newenvironment{teilaufg}{\begin{enumerate}%
+    \renewcommand{\theenumi}{\alph{enumi}}%
+    \renewcommand{\labelenumi}{(\theenumi)}%
+    \renewcommand{\theenumii}{\roman{enumii}}%
+    \renewcommand{\labelenumii}{(\theenumii)}}{\end{enumerate}}
+
+
+%%
+%% Kopf
+%%
+
+\newcommand{\logo}{\includegraphics[height=10ex]{kit_logo_de_1c_schwarz}}
+% \setlength{\overfullrule}{3pt} 
+
+\newcommand{\lecturetitle}{Formal Systems II: Applications, SoSe 2025}
+
+
+\def\@true{true}
+\def\@false{false}
+
+% Uhrzeit:
+\newcount\@th
+\newcount\@tm
+
+\newcommand{\@now}{%
+\@th=\time%
+\divide\@th by 60
+\the\@th:%
+\multiply \@th by -60
+\@tm=\time%
+\advance\@tm by \@th
+\ifnum\@tm<10 0\fi\the\@tm%
+}
+
+\newlength{\kopfwidth}
+\setlength{\kopfwidth}{\textwidth}
+\addtolength{\kopfwidth}{-22pt}
+
+%\newcommand{\abgabe}[1]{\textbf{Dieses %
+%  Übungsblatt \ifx\@true\lsg wurde \else wird \fi in der Übung am #1 besprochen.}} %
+
+\newcommand{\internalheader}{Interner Gebrauch!}
+
+\newlength{\logowidth}
+\setlength{\logowidth}{\widthof{\logo}}
+
+% \newcommand{\kopf}[3][0]{\noindent
+% \begin{tabular}{lll}
+% \parbox[c]{\logowidth}{\logo} &
+% \parbox[c]{9cm}{
+%     Karlsruher Institut für Technologie \newline
+%     Institut für Theoretische Informatik\newline
+%     Prof.~Dr.~Peter~H.~Schmitt\newline
+%     \if0#1 {David Farag\'o, Christoph Scheben, Mattias Ulbrich}\else {#1}\fi} &
+% \ifx\@true\published \else %
+% \parbox[b]{6cm}{
+%   \centering \rule{0pt}{16pt}
+%     \fbox{
+%       \begin{tabular}{c}
+%         \Large \bf\internalheader\\
+%         \today{} \@now
+%     \end{tabular}
+%   }}%
+% \fi
+% \\
+% \end{tabular}
+% \bigskip
+%   \begin{center}
+%     {\Large\textbf{\lecturetitle}} \par
+%     \bigskip
+%     {\Large \ifx\@true\lsg Lösungen zu \fi Übungsblatt #2} \par
+%     \bigskip
+%     \abgabe{#3}
+%   \end{center}
+%   \vspace{4ex}
+% }
+
+
+\newcommand{\kopfBlatt}[3][0]{\noindent %default: M.~Ulbrich
+\begin{tabular}{lll}
+  \parbox[c]{\logowidth}{\logo}                             &
+  \parbox[c]{9cm}{
+    Karlsruher Institut für Technologie \newline
+    Institut für Theoretische Informatik\newline
+    Prof.~Dr.~Bernhard Beckert, Dr.~Mattias Ulbrich\newline
+    \if0#1 {Philipp Kern, Samuel Teuber}\else {#1}\fi} &
+  \ifx\@true\published \else %
+  \parbox[b]{6cm}{
+    \centering \rule{0pt}{16pt}
+    \fbox{
+       \begin{tabular}{c}
+         \Large \bf\internalheader \\
+         \today{} \@now
+     \end{tabular}
+   }}%
+\fi   
+                                   \\
+\end{tabular}
+\bigskip
+  \begin{center}
+    {\Large\textbf{\lecturetitle}} \par
+    \vspace{1ex}
+    {\Large #2}
+  \end{center}
+  \vspace{4ex}
+}
+
+\newcommand{\m}[1]{\mbox{$#1$}}
+
+\newcommand{\aufgabenTitel}[2]{
+  \section[#1]{#1 \hfill {\footnotesize \normalfont [#2 Punkte]}}
+}
+
+\newcommand{\bittewenden}{%
+\vspace*{\fill}%
+\hspace*{\fill}\textbf{--- bitte wenden ---}\hspace*{\fill}%
+\vspace*{\fill}%
+\clearpage}
+
+%
+% Bemerkung am Rand:
+%
+
+\setlength{\marginparwidth}{1.5cm} 
+\newcommand{\rand}[1]{\marginpar{{\sf\footnotesize #1}}}
+
+%\newenvironment{loesung}[1]{\noindent\underline{\large L\"osung:}
+%    \par\medskip\noindent{#1}}{\bigskip}
+
+\makeatother
