@@ -23,3 +23,6 @@ ENV JULIA_CPU_TARGET=generic
 
 # Install ERAN and MIPVerify
 RUN dnnv_manage install mipverify eran
+
+COPY mipverify_init.py /opt/conda/lib/python3.9/site-packages/dnnv/verifiers/mipverify/__init__.py
+COPY mipverify_utils.py /opt/conda/lib/python3.9/site-packages/dnnv/verifiers/mipverify/utils.py
