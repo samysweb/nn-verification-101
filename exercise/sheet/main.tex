@@ -88,12 +88,36 @@ Before we try to specify and verify a few neural networks of our own, let's firs
     Check if \texttt{DNNV} modified the query in the way that you had expected.
 \end{enumerate}
 
+\begin{center}
+    \textbf{For the subsequent exercises we recommend using the same DNNV configuration.}
+\end{center}
+
 \section*{Guaranteeing Functional Correctness}
-In the section below ("Airborne Collision Avoidance Properties") we have provided you with some properties.
+In the section below (``Airborne Collision Avoidance Properties'') we have provided you with some properties.
 Under \texttt{\_\_shared/nets/} you find some NNs for an Airborne Collision Avoidance System.
 Use these NNs to verify some of the properties formulated below.
 
 \section*{Robutness to image perturbations}
+Now that we have verified some functional properties for ACAS,
+let's try to prove the robustness of an NN for a specific input image.
+To this end, \texttt{\_\_shared/images} contains some numpy arrays of images
+(\texttt{inputN.npy} is supposed to be classified as N).
+%
+We now want you to prove the following specification:
+\begin{center}
+    For any image $x'$ where $\left\| x - x' \right\|_{\infty} < \varepsilon$,
+    the image $x'$ is classified the same as $x$.
+\end{center}
+To this end, you can initialize $x$ with one of the images from \texttt{\_\_shared/images}
+as follows:
+\begin{verbatim}
+    x = Image("<path to image>")
+\end{verbatim}
+
+\textit{Hint 1:} Start with $\varepsilon=1/255$ and later check if you can increase it.
+
+\textit{Hint 2:} \texttt{\_\_shared/VisualizeNpy.ipynb} contains a simple example of how you can visualize the contents of an npy file as image.
+In case \texttt{DNNV} returns SAT you can save the counterexample as a numpy array using \texttt{--save-violation YOUR\_PATH}.
 
 % dnnv -v --eran --eran.domain deepzono -N N __shared/nets/mnist_convnn_aug.onnx __shared/solutions/mnist-0.py
 % UNSAT
@@ -186,7 +210,7 @@ Choose some of these properties and verify them on suggested NNs:
 %   - Desired output property: the score for COC is at most 1500.
 % """
 
-\paragraph*{Property 2}
+\paragraph*{Property 3}
 Assume the intruder is 1500-1800 meters away and directly ahead ($\pm 3$ degrees).
 If the intruder is flying directly towards the ownship ($\pm 3$ degrees),
 the score for Clear of Conflict will not be minimal.
@@ -239,6 +263,10 @@ You can inspect the counterexample via:\\
 import numpy as np
 print(np.load(YOUR\_PATH))
 }
+
+\textit{Hint 3:}
+In case \texttt{DNNV} does not provide results, try to enable the option \texttt{--mipverify.tightening interval_arithmetic}.
+This changes how bounds for $\mathrm{ReLU}$ nodes are computed.
 
 \textit{Suggested NN:} ACAS\_2\_1.onnx ($\alpha_{\text{prev}}=\text{weak left}$, $\tau=0s$)
 
