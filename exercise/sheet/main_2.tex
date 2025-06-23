@@ -1,0 +1,173 @@
+% !TeX root = main_2.tex
+
+\documentclass[11pt,fleqn]{article}
+\usepackage{uebungen}
+\renewcommand{\logo}{\includegraphics[height=10ex]{kit_logo_de_1c_schwarz}}
+
+\usepackage{amsfonts}
+\usepackage[dvipsnames]{xcolor}
+\usepackage[hidelinks,colorlinks=true,linktocpage=true,linkcolor=NavyBlue,urlcolor=NavyBlue,citecolor=NavyBlue]{hyperref}
+%\usepackage[hang]{subfigure}
+\usepackage{lmodern}
+%\usepackage[scaled=.85]{beramono}
+\usepackage{listings}
+
+\usepackage{cleveref}
+
+%\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{graphicx}
+
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{amssymb}
+\newtheorem{definition}{Definition}
+\newtheorem{lemma}{Lemma}
+
+\usepackage{todonotes}
+
+\let\vec\mathbf
+
+\definecolor{shellBack}{rgb}{0.95,0.95,0.9}
+\lstset{basicstyle=\ttfamily, backgroundcolor=\color{shellBack}}
+
+\def\published{true}
+
+\begin{document}
+
+\kopfBlatt{Neural Network Verification (Exercises 2)}
+
+\section*{Incomplete Verification using Zonotopes}
+
+On the last exercise sheet, we used mixed integer linear programming (via the \texttt{MIPVerify} solver) to verify 
+properties of image classifiers and airborne collision avoidance systems (ACAS).
+
+The \texttt{DNNV} framework also provides a zonotope-based verifier called \texttt{DeepZono}, which can be called via the following command:
+\begin{verbatim}
+    dnnv -v --seed 42 -N N <network.onnx> --eran <property.py>
+\end{verbatim}
+(make sure to include \texttt{--seed 42} to ensure reproducibility).
+If the property you want to prove has a defines a parameter via e.g. 
+\begin{verbatim}
+    epsilon = Parameter("epsilon", default=1/255)
+\end{verbatim}
+you can pass a value for this parameter via the command line as follows:
+\begin{verbatim}
+    dnnv -v -N N <network.onnx>  --eran --prop.epsilon=0.02 <property.py
+\end{verbatim}
+
+In this exercise, we will see, how incomplete zonotope-based verifiers compare to the MIP-based approach.
+
+\paragraph{Task 1:}
+Use the \texttt{DeepZono} verifier to verify the properties from the previous exercise sheet.
+How does \texttt{DeepZono} compare to \texttt{MIPVerify} with respect to runtime?
+Are there instances that can be solved by \texttt{MIPVerify} but not by \texttt{DeepZono}?
+
+
+\section*{Confidence-based Equivalence Verification}
+
+When neural networks are used in resource-constrained or performance-critical environements,
+they are often pruned to reduce their size and the number of operations required to evaluate them.
+However, we still want to ensure that the pruned network behaves similarly to the original one.
+
+In this exercise, we are going to look at a network trained to classify particla jets in CERN's 
+Large Hadron Collider (LHC) experiments.
+In this setting, large amounts of data have to be processed in real-time, making pruning highly desirable.
+
+Specifically, we will look at the \texttt{lhc\_2\_20-1\_no\_softmax.onnx} network, and a compressed version of it.
+In the \texttt{lhc\_2\_20-1\_0.1\_no\_softmax.onnx} network, 10\% of the weights have been set to zero.
+
+As neither \texttt{MIPVerify} nor \texttt{DeepZono} support the softmax activation function, we removed it from the networks.
+However, remember that we can overapproximate it for a confidence $\delta \geq \frac{1}{2}$ by the following linear constraints: 
+\begin{align*}
+    \left\{
+        x \in \mathbb{R}^m~\middle|~
+        \mathrm{softmax}_i\left(x\right) \geq \delta
+    \right\}
+\subseteq
+\left\{
+x \in \mathbb{R}^m~\middle|~
+x_i \geq x_j + \ln\left(\frac{\delta}{1-\delta}\right)
+\right\}
+\end{align*}
+
+\paragraph{Task 2.1:}
+The \texttt{conf\_equiv\_0.py} property file already contains code to constrain the inputs of the neural 
+networks to an $\varepsilon$-box around the origin.
+Complete \texttt{conf\_equiv\_0.py} such that it checks the following property:
+\\
+\\
+\emph{If the original network classifies its inputs as a gluon (output class $0$), with a confidence of at leat $\delta$, 
+then the compressed network also classifies the input as a gluon.}
+\\
+\\
+\textit{Hint 1:} 
+You can access the $j$-th output of a neural network \texttt{N} given an input $x$ via \texttt{N(x)[0,j]} (the first index is the batch dimension).
+
+\paragraph{Task 2.2:}
+Try to verify the property using \texttt{DeepZono}.
+How large can you set $\varepsilon$ for a specific $\delta$ such that the property can still be verified?
+How large can you set $\delta$ for a specific $\varepsilon$ such that the property can still be verified?
+
+
+\section*{Scalability}
+
+Verification of $\mathrm{ReLU}$ neural networks is a decidable, but NP complete problem.
+A natural question is, how well the verification algorithms scale in practice and which
+parameters influence verification runtime.
+
+To this end, we will look at a range of targeted robustness properties
+\begin{equation*}
+    \forall \vec{x} \in [\vec{x}_0 - \varepsilon, \vec{x}_0 + \varepsilon]: f_{\mathcal{N}}(\vec{x})_0 \geq f_{\mathcal{N}}(\vec{x})_1
+\end{equation*}
+parameterized by different networks $\mathcal{N}$ and values for $\varepsilon$.
+
+\paragraph{Task 3:}
+Run \texttt{MIPVerify} and \texttt{DeepZono} with different combinations of 
+\begin{itemize}
+    \item networks: \texttt{mnist\_relu\_3\_50.onnx} or \texttt{mnist\_relu\_9\_200.onnx}
+    \item perturbation radius $\varepsilon$
+    \item bounds tightening algorithm for \texttt{MIPVerify}: Interval arithmetic or linear programming
+\end{itemize}
+You can run the property using the following commands for \texttt{MIPVerify} and \texttt{DeepZono}:
+\begin{verbatim}
+    dnnv -v --seed 42 -N N <network.onnx> --mipverify --mipverify.optimizer GLPK 
+            --mipverify.tightening [interval_arithmetic|lp] 
+            --prop.epsilon=<...> targeted_robustness.py
+
+    dnnv -v --seed 42 -N N <network.onnx> --eran 
+            --prop.epsilon=<...> targeted_robustness.py
+\end{verbatim}
+How do the parameters or the network affect the runtime of the verifiers?
+\\
+\\
+\textit{Hint:}
+\''Interesting\'' combinations of values are shown in Table \ref{tab:interesting_combinations}.
+
+\begin{table*}
+\centering
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+    Network & $\varepsilon$ & MIPVerify Tightening \\
+\hline
+    mnist\_relu\_3\_50.onnx & 0.046  & IA  \\  % both unsat, MIP 30sec, DeepZono 1.1sec
+    mnist\_relu\_3\_50.onnx & 0.047 & IA / LP  \\  % both unsat, MIP (IA) 150sec, MIP (LP) 28sec, DeepZono 1.2sec
+    mnist\_relu\_3\_50.onnx & 0.06 & LP \\  % MIP unsat 64sec, DeepZono unknown 1.2sec
+    mnist\_relu\_9\_200.onnx & 0.0039 & IA \\  % both unsat, MIP 28sec, DeepZono 3sec
+    mnist\_relu\_9\_200.onnx & 0.0078 & IA \\  % both unsat, MIP 29sec, DeepZono 3sec
+    mnist\_relu\_9\_200.onnx & 0.016 & LP \\  % MIP unsat 133sec, DeepZono unknown 4sec
+\hline
+\end{tabular}
+\caption{Interesting combinations of networks, $\varepsilon$, and verifiers.
+         The \texttt{DeepZono} verifier can be run for each of the above entries.
+         \texttt{MIPVerify} can be run with the \texttt{--mipverify.tightening} flag set to either \texttt{interval\_arithmetic} or \texttt{lp} as 
+         indicated in the last column.}
+\label{tab:interesting_combinations}
+\end{table*}
+
+
+
+
+
+
+\end{document}
