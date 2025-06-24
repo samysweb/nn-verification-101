@@ -14,7 +14,7 @@
 
 \usepackage{cleveref}
 
-%\usepackage{caption}
+\usepackage{caption}
 \usepackage{subcaption}
 \usepackage{graphicx}
 
@@ -42,21 +42,22 @@
 On the last exercise sheet, we used mixed integer linear programming (via the \texttt{MIPVerify} solver) to verify 
 properties of image classifiers and airborne collision avoidance systems (ACAS).
 
-The \texttt{DNNV} framework also provides a zonotope-based verifier called \texttt{DeepZono}, which can be called via the following command:
+The \texttt{DNNV} framework also provides a zonotope-based verifier called \texttt{DeepZono} (part of the tool \texttt{ERAN} \footnote{\url{https://github.com/eth-sri/eran}} ), which can be called via the following command:
 \begin{verbatim}
     dnnv -v --seed 42 -N N <network.onnx> --eran <property.py>
 \end{verbatim}
 (make sure to include \texttt{--seed 42} to ensure reproducibility).
-If the property you want to prove has a defines a parameter via e.g. 
+
+If the property you want to prove defines a parameter via e.g. 
 \begin{verbatim}
     epsilon = Parameter("epsilon", default=1/255)
 \end{verbatim}
 you can pass a value for this parameter via the command line as follows:
 \begin{verbatim}
-    dnnv -v -N N <network.onnx>  --eran --prop.epsilon=0.02 <property.py
+    dnnv -v -N N <network.onnx>  --eran --prop.epsilon=0.02 <property.py>
 \end{verbatim}
 
-In this exercise, we will see, how incomplete zonotope-based verifiers compare to the MIP-based approach.
+In this exercise, you will compare the performance of the incomplete zonotope-based verifier \texttt{DeepZono} with the complete MIP-based verifier \texttt{MIPVerify}.
 
 \paragraph{Task 1:}
 Use the \texttt{DeepZono} verifier to verify the properties from the previous exercise sheet.
@@ -66,16 +67,16 @@ Are there instances that can be solved by \texttt{MIPVerify} but not by \texttt{
 
 \section*{Confidence-based Equivalence Verification}
 
-When neural networks are used in resource-constrained or performance-critical environements,
+When neural networks are used in resource-constrained or performance-critical environments,
 they are often pruned to reduce their size and the number of operations required to evaluate them.
-However, we still want to ensure that the pruned network behaves similarly to the original one.
+However, we still want to ensure that the pruned network behaves similarly to the original one on relevant inputs.
 
-In this exercise, we are going to look at a network trained to classify particla jets in CERN's 
+In this exercise, we are going to look at a network trained to classify particle jets in CERN's 
 Large Hadron Collider (LHC) experiments.
 In this setting, large amounts of data have to be processed in real-time, making pruning highly desirable.
 
-Specifically, we will look at the \texttt{lhc\_2\_20-1\_no\_softmax.onnx} network, and a compressed version of it.
-In the \texttt{lhc\_2\_20-1\_0.1\_no\_softmax.onnx} network, 10\% of the weights have been set to zero.
+Specifically, we will look at the \texttt{lhc\_2\_20-1\_no\_softmax.onnx} network (\href{https://netron.app/?url=https://github.com/samysweb/nn-verification-101/blob/f1260815790301da1127bd085e3797108e0eeec4/provided/nets/lhc_2_20-1_no_softmax.onnx}{view in Netron here}), and a compressed version of it.
+In the \texttt{lhc\_2\_20-1\_0.1\_no\_softmax.onnx} network (\href{https://netron.app/?url=https://github.com/samysweb/nn-verification-101/blob/f1260815790301da1127bd085e3797108e0eeec4/provided/nets/lhc_2_20-1-0.1_no_softmax.onnx}{view in Netron here}), 10\% of the weights have been set to zero.
 
 As neither \texttt{MIPVerify} nor \texttt{DeepZono} support the softmax activation function, we removed it from the networks.
 However, remember that we can overapproximate it for a confidence $\delta \geq \frac{1}{2}$ by the following linear constraints: 
@@ -92,12 +93,11 @@ x_i \geq x_j + \ln\left(\frac{\delta}{1-\delta}\right)
 \end{align*}
 
 \paragraph{Task 2.1:}
-The \texttt{conf\_equiv\_0.py} property file already contains code to constrain the inputs of the neural 
-networks to an $\varepsilon$-box around the origin.
-Complete \texttt{conf\_equiv\_0.py} such that it checks the following property:
+The file \texttt{conf\_equiv\_0.py} already defines an input constraint restricting inputs to an $\varepsilon$-box around the origin.
+Extend \texttt{conf\_equiv\_0.py} to express the following:
 \\
 \\
-\emph{If the original network classifies its inputs as a gluon (output class $0$), with a confidence of at leat $\delta$, 
+\emph{If the original network classifies its inputs as a gluon (output class $0$), with confidence at least $\delta$, 
 then the compressed network also classifies the input as a gluon.}
 \\
 \\
@@ -113,8 +113,7 @@ How large can you set $\delta$ for a specific $\varepsilon$ such that the proper
 \section*{Scalability}
 
 Verification of $\mathrm{ReLU}$ neural networks is a decidable, but NP complete problem.
-A natural question is, how well the verification algorithms scale in practice and which
-parameters influence verification runtime.
+A natural question is how well these verification algorithms scale in practice, and which factors influence their runtime.
 
 To this end, we will look at a range of targeted robustness properties
 \begin{equation*}
@@ -123,9 +122,12 @@ To this end, we will look at a range of targeted robustness properties
 parameterized by different networks $\mathcal{N}$ and values for $\varepsilon$.
 
 \paragraph{Task 3:}
-Run \texttt{MIPVerify} and \texttt{DeepZono} with different combinations of 
+Run both \texttt{MIPVerify} and \texttt{DeepZono} on the given property \texttt{targeted\_robustness.py} using various combinations of 
 \begin{itemize}
-    \item networks: \texttt{mnist\_relu\_3\_50.onnx} or \texttt{mnist\_relu\_9\_200.onnx}
+    \item networks: \texttt{mnist\_relu\_3\_50.onnx} 
+     (\href{https://netron.app/?url=https://github.com/samysweb/nn-verification-101/blob/f1260815790301da1127bd085e3797108e0eeec4/provided/nets/mnist_relu_3_50.onnx}{view in Netron here})
+    or \texttt{mnist\_relu\_9\_200.onnx}
+    (\href{https://netron.app/?url=https://github.com/samysweb/nn-verification-101/blob/f1260815790301da1127bd085e3797108e0eeec4/provided/nets/mnist_relu_9_200.onnx}{view in Netron here})
     \item perturbation radius $\varepsilon$
     \item bounds tightening algorithm for \texttt{MIPVerify}: Interval arithmetic or linear programming
 \end{itemize}
@@ -138,11 +140,11 @@ You can run the property using the following commands for \texttt{MIPVerify} and
     dnnv -v --seed 42 -N N <network.onnx> --eran 
             --prop.epsilon=<...> targeted_robustness.py
 \end{verbatim}
-How do the parameters or the network affect the runtime of the verifiers?
+How do the parameters or the network architecture affect the runtime of each verifier?
 \\
 \\
 \textit{Hint:}
-\''Interesting\'' combinations of values are shown in Table \ref{tab:interesting_combinations}.
+``Interesting'' combinations of values are shown in Table \ref{tab:interesting_combinations}.
 
 \begin{table*}
 \centering
